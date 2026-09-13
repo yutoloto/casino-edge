@@ -184,6 +184,17 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
 .qchoices button.ok{background:#2a7d5b; border-color:#3fa87a; color:#fff; opacity:1}
 .qchoices button.no{background:#8c3b34; border-color:#c4544c; color:#fff; opacity:1}
 
+
+/* app mode switcher + share */
+[hidden]{display:none !important}
+.modesel{display:flex; gap:4px; margin-top:11px}
+.modesel button{flex:1; font-size:11px; padding:5px 2px; border-radius:6px}
+.modesel button.on{background:var(--gold); color:#17120a; border-color:var(--gold); font-weight:700}
+.sharerow{display:flex; align-items:center; gap:8px; margin:9px 0; flex-wrap:wrap}
+.sharelbl{flex:0 0 118px; font-size:12.5px; color:var(--tx2)}
+.shareurl{flex:1 1 190px; min-width:0; font-size:11.5px; overflow-x:auto; white-space:nowrap; padding:5px 8px}
+.sharerow button{flex:0 0 auto; font-size:12px; padding:6px 12px}
+
 @media(max-width:860px){
   .wrap{flex-direction:column}
   #nav{width:100%; flex:none; height:auto; position:static; border-right:0; border-bottom:1px solid var(--line); padding-bottom:10px}
@@ -193,6 +204,7 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
   #nav a.on{border-left:0; border-bottom-color:var(--gold)}
   #main{padding:20px 16px 100px}
   .g2,.g3,.g4{grid-template-columns:1fr}
+  .sharelbl{flex:0 0 100%}
   .g4.keep{grid-template-columns:repeat(2,1fr)}
 }
 </style>
@@ -246,10 +258,11 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
   <h3>このアプリの使い方</h3>
   <div class="grid g3">
     <div class="card"><div class="ttl">1. 土台を作る</div><p style="font-size:13px;margin:0">「期待値とハウスエッジ」「資金管理」だけは全ゲーム共通。ここを飛ばすと何を覚えても意味が無い。</p></div>
-    <div class="card"><div class="ttl">2. ドリルを回す</div><p style="font-size:13px;margin:0">読むだけでは打てない。BSドリル・カウントドリル・ポットオッズドリルは<b>正答率98%以上</b>になるまで。</p></div>
+    <div class="card"><div class="ttl">2. ドリルを回す</div><p style="font-size:13px;margin:0">読むだけでは打てない。3分セッションのドリルを<b>正答率95%以上・平均2秒以内</b>になるまで回す。</p></div>
     <div class="card"><div class="ttl">3. 現場の語彙を入れる</div><p style="font-size:13px;margin:0">海外カジノで働くなら英語の卓上用語が要る。「用語集」と「カジノで働く」を先に読んでもいい。</p></div>
   </div>
 
+  <div data-only="all,bj">
   <h3>到達目標（チェックリスト）</h3>
   <table>
     <thead><tr><th>段階</th><th>内容</th><th>判定基準</th></tr></thead>
@@ -263,6 +276,23 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
       <tr><td>Lv.7</td><td>GTOから意図的に外れる（エクスプロイト）</td><td>相手の傾向から離脱方向を言語化できる</td></tr>
     </tbody>
   </table>
+  </div>
+
+  <div data-only="poker">
+  <h3>到達目標（チェックリスト）</h3>
+  <table>
+    <thead><tr><th>段階</th><th>内容</th><th>判定基準</th></tr></thead>
+    <tbody>
+      <tr><td>Lv.1</td><td>ポットオッズと必要エクイティを暗算できる</td><td>ポットオッズ ドリル正答率 95%以上</td></tr>
+      <tr><td>Lv.2</td><td>MDF・α・バリュー:ブラフ比が反射で出る</td><td>頻度ドリル正答率 90%以上</td></tr>
+      <tr><td>Lv.3</td><td>プリフロップRFIをポジション別に</td><td>RFIドリル正答率 90%以上（6-max / 9-max 両方）</td></tr>
+      <tr><td>Lv.4</td><td>対オープン・対3ベットの3分割</td><td>全シナリオ ドリル正答率 85%以上</td></tr>
+      <tr><td>Lv.5</td><td>浅いスタックのプッシュ/フォールド</td><td>Nashドリル正答率 85%以上</td></tr>
+      <tr><td>Lv.6</td><td>資金管理（バンクロール）を数字で決められる</td><td>必要バイイン数と破産確率を自分で出せる</td></tr>
+      <tr><td>Lv.7</td><td>GTOから意図的に外れる（エクスプロイト）</td><td>相手の傾向から離脱方向を言語化できる</td></tr>
+    </tbody>
+  </table>
+  </div>
 
   <div class="card gold">
     <div class="ttl">⚠ 働くなら先に確認すること</div>
@@ -2979,8 +3009,8 @@ const QG={
 };
 const CATS=Object.keys(QG);
 const GROUPS={all:CATS,bj:['bj_bs','bj_dev','hilo','count5'],poker:['potodds','freq','outs','rfi','vsopen','vs3bet','push']};
-function weakList(){
-  const scored=CATS.map(c=>{const s=PROG.cat[c]||{n:0,ok:0};return {c,acc:s.n>=5?s.ok/s.n:0.5,n:s.n};}).filter(x=>x.n>=5);
+function weakList(allow){
+  const scored=(allow||CATS).map(c=>{const s=PROG.cat[c]||{n:0,ok:0};return {c,acc:s.n>=5?s.ok/s.n:0.5,n:s.n};}).filter(x=>x.n>=5);
   if(scored.length<3)return null;
   scored.sort((a,b)=>a.acc-b.acc);
   return scored.slice(0,Math.max(3,Math.ceil(scored.length/2))).map(x=>x.c);
@@ -3085,8 +3115,12 @@ function answer(i){
 }
 function startSession(mode,secs){
   const m=mode||QMODE,s=secs||QLEN;
-  let list=GROUPS[m];
-  if(m==='weak'){list=weakList()||CATS;}
+  const allow=(typeof allowedCats==='function')?allowedCats():CATS;
+  let list;
+  if(m==='weak')list=weakList(allow)||allow;
+  else if(m==='all')list=allow;
+  else list=(GROUPS[m]||allow).filter(c=>allow.indexOf(c)>=0);
+  if(!list.length)list=allow;
   SESS={list:list,secs:s,left:s,n:0,ok:0,xp:0,combo:0,best:0,timeSum:0,cat:{},q:null,locked:false,paused:false};
   $('qplay').classList.add('on');document.body.style.overflow='hidden';
   $('q-time').textContent=fmtT(s);$('q-bar').style.width='0%';
@@ -3169,6 +3203,140 @@ if(location.protocol.indexOf('http')===0&&'serviceWorker' in navigator){
     el.remove();
   };
 })();
+
+/* ======================= APP MODE (全部 / ポーカー / BJ) ======================= */
+const MODE_SEC={
+  all:null,
+  poker:['home','quick','bankroll','pk-math','pk-gto','pk-range','pk-vs','pk-push','pk-post','pk-exp','pk-tools','gloss'],
+  bj:['home','quick','basics','bankroll','myths','bj-rules','bj-bs','bj-drill','bj-count','bj-cdrill','bj-dev','edge','gloss']
+};
+const MODE_LABEL={all:'カジノ全部',poker:'ポーカーだけ',bj:'ブラックジャックだけ'};
+const MODE_NOTE={
+  all:'全ゲームの理論とドリルを表示している。',
+  poker:'ポーカーに関係ない章（ブラックジャック・バカラ・ルーレット・クラップス等）を隠している。3分セッションもポーカーの問題だけになる。',
+  bj:'ブラックジャックに関係ない章（ポーカー等）を隠している。3分セッションもBJの問題だけになる。'
+};
+let APPMODE='all';
+(function(){
+  const q=location.search.toLowerCase();
+  let m=null;
+  const mm=q.match(/[?&]mode=(poker|bj|all)/);
+  if(mm)m=mm[1];
+  else if(/[?&]poker(&|=|$)/.test(q))m='poker';
+  else if(/[?&]bj(&|=|$)/.test(q))m='bj';
+  if(!m){try{m=localStorage.getItem('ce_mode');}catch(e){}}
+  APPMODE=(m&&MODE_SEC.hasOwnProperty(m))?m:'all';
+  try{localStorage.setItem('ce_mode',APPMODE);}catch(e){}
+})();
+function secAllowed(id){const s=MODE_SEC[APPMODE];return !s||s.indexOf(id)>=0;}
+function allowedCats(){
+  if(APPMODE==='poker')return GROUPS.poker.slice();
+  if(APPMODE==='bj')return GROUPS.bj.slice();
+  return CATS.slice();
+}
+function rebuildNav(){
+  const nb=document.getElementById('navbody');
+  nb.innerHTML='';
+  NAV.forEach(([g,items])=>{
+    const keep=items.filter(([id])=>secAllowed(id));
+    if(!keep.length)return;
+    const d=document.createElement('div');d.className='grp';d.textContent=g;nb.appendChild(d);
+    keep.forEach(([id,label])=>{
+      const a=document.createElement('a');a.href='#'+id;a.dataset.id=id;a.textContent=label;nb.appendChild(a);
+    });
+  });
+  nb.querySelectorAll('a').forEach(a=>a.onclick=e=>{if(location.hash==='#'+a.dataset.id){e.preventDefault();go(a.dataset.id);}});
+}
+const _go=go;
+go=function(id){ if(!secAllowed(id))id='home'; _go(id); };
+
+function setMode(m,silent){
+  if(!MODE_SEC.hasOwnProperty(m))return;
+  APPMODE=m;
+  try{localStorage.setItem('ce_mode',m);}catch(e){}
+  rebuildNav();paintMode();rebuildQuickChips();
+  if(!silent){
+    const cur=document.querySelector('section.on');
+    if(!cur||!secAllowed(cur.id))go('home');
+    else document.querySelectorAll('#navbody a').forEach(a=>a.classList.toggle('on',a.dataset.id===cur.id));
+  }
+}
+function paintMode(){
+  document.querySelectorAll('#modesel button').forEach(b=>b.classList.toggle('on',b.dataset.mo===APPMODE));
+  document.querySelectorAll('[data-only]').forEach(el=>{
+    el.hidden = el.dataset.only.split(',').indexOf(APPMODE)<0;
+  });
+  const b=document.getElementById('mode-banner');
+  if(b){
+    b.innerHTML='<div class="ttl">表示モード：'+MODE_LABEL[APPMODE]+'</div>'+
+      '<p style="margin:0;font-size:13px">'+MODE_NOTE[APPMODE]+
+      (APPMODE==='all'?'':' 左上（スマホは上）の切替でいつでも戻せる。')+'</p>';
+  }
+}
+/* ---- mode switcher into the sidebar brand ---- */
+(function(){
+  const brand=document.querySelector('#nav .brand');
+  if(!brand)return;
+  const d=document.createElement('div');d.className='modesel';d.id='modesel';
+  d.innerHTML=Object.keys(MODE_SEC).map(m=>'<button data-mo="'+m+'">'+
+    {all:'全部',poker:'ポーカー',bj:'BJ'}[m]+'</button>').join('');
+  brand.appendChild(d);
+  d.querySelectorAll('button').forEach(b=>b.onclick=()=>setMode(b.dataset.mo));
+})();
+
+/* ---- quick session chips follow the mode ---- */
+function rebuildQuickChips(){
+  const host=document.getElementById('q-mode');if(!host)return;
+  const items=[];
+  if(APPMODE!=='poker')items.push(['bj','ブラックジャックだけ']);
+  if(APPMODE!=='bj')items.push(['poker','ポーカーだけ']);
+  items.push(['all',APPMODE==='all'?'全部':'このモードの全部']);
+  items.push(['weak','弱点だけ']);
+  if(items.map(i=>i[0]).indexOf(QMODE)<0)QMODE=items[0][0];
+  host.innerHTML=items.map(([m,l])=>'<button data-m="'+m+'"'+(m===QMODE?' class="on"':'')+'>'+l+'</button>').join('');
+  host.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    QMODE=b.dataset.m;host.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    const s=document.getElementById('q-start');
+    if(s)s.textContent=(QMODE==='weak'&&!weakList(allowedCats()))?'▶ スタート（データ不足→このモードの全部で出題）':'▶ スタート';
+  });
+}
+
+/* ---- share card ---- */
+(function(){
+  const home=document.getElementById('home');if(!home)return;
+  const base=location.origin+location.pathname.replace(/index\.html$/,'');
+  const rows=[['all','カジノ全部',base],['poker','ポーカーだけ',base+'?mode=poker'],['bj','ブラックジャックだけ',base+'?mode=bj']];
+  const el=document.createElement('div');
+  el.innerHTML='<h3>人に渡す</h3>'+
+    '<div class="card"><p style="margin:0 0 10px">リンクを送るだけ。<b>相手の画面は最初からそのモードで開く</b>（ログイン不要・進捗は相手の端末に保存される）。</p>'+
+    rows.map(([m,l,u])=>
+      '<div class="sharerow"><div class="sharelbl">'+l+'</div>'+
+      '<code class="shareurl">'+u+'</code>'+
+      '<button data-u="'+u+'">コピー</button></div>').join('')+
+    '<p style="margin:12px 0 0;font-size:12.5px;color:var(--tx2)">相手は開いたあと <b>⋮ → ホーム画面に追加</b> でアプリになる。あとから左上の切替でモードは変えられる。</p></div>';
+  home.appendChild(el);
+  el.querySelectorAll('button[data-u]').forEach(b=>b.onclick=async()=>{
+    const u=b.dataset.u,old=b.textContent;
+    let ok=false;
+    try{await navigator.clipboard.writeText(u);ok=true;}catch(e){
+      try{const t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();ok=document.execCommand('copy');t.remove();}catch(e2){}
+    }
+    b.textContent=ok?'コピーした':'選択して';
+    if(!ok){const r=document.createRange();r.selectNodeContents(b.previousElementSibling);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+    setTimeout(()=>{b.textContent=old;},1600);
+  });
+})();
+
+/* ---- mode banner on home ---- */
+(function(){
+  const home=document.getElementById('home'),hd=home&&home.querySelector('.sechd');
+  if(!hd)return;
+  const b=document.createElement('div');b.className='card';b.id='mode-banner';
+  hd.parentNode.insertBefore(b,hd.nextSibling);
+})();
+
+rebuildNav();paintMode();rebuildQuickChips();
+
 
 /* boot */
 go(location.hash.slice(1)||'home');
