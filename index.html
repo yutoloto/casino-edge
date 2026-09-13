@@ -195,6 +195,27 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
 .shareurl{flex:1 1 190px; min-width:0; font-size:11.5px; overflow-x:auto; white-space:nowrap; padding:5px 8px}
 .sharerow button{flex:0 0 auto; font-size:12px; padding:6px 12px}
 
+
+/* lessons + term help */
+.lesson{display:flex; align-items:center; gap:12px; background:var(--surf); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:8px 0; cursor:pointer}
+.lesson:hover{border-color:var(--gold2)}
+.lesson.done{border-color:#2a6b4c}
+.lnum{flex:0 0 34px; height:34px; border-radius:50%; background:var(--surf2); color:var(--gold); font-family:var(--mono); font-weight:700; display:flex; align-items:center; justify-content:center}
+.lesson.done .lnum{background:#1c4a36; color:#7fdcae}
+.lbody{flex:1; min-width:0}
+.ltitle{font-weight:700; font-size:14.5px}
+.lsum{font-size:12.5px; color:var(--tx2); margin-top:2px}
+.lgo{flex:0 0 auto; font-size:12.5px; color:var(--gold)}
+.lessonbody{font-size:15.5px; line-height:1.9}
+.lessonbody p{margin:12px 0}
+.lessonbody ol,.lessonbody ul{padding-left:22px}
+.lessonbody li{margin:7px 0}
+.lessonbody .card{margin:14px 0}
+.term{border-bottom:1px dotted var(--gold2); cursor:help}
+#termpop{position:fixed; z-index:300; background:#17140c; border:1px solid var(--gold2); border-radius:10px; padding:10px 12px;
+  font-size:13px; line-height:1.6; color:var(--tx); box-shadow:0 8px 24px rgba(0,0,0,.55); display:none}
+#termpop b{color:var(--gold); display:block; margin-bottom:2px}
+
 @media(max-width:860px){
   .wrap{flex-direction:column}
   #nav{width:100%; flex:none; height:auto; position:static; border-right:0; border-bottom:1px solid var(--line); padding-bottom:10px}
@@ -370,6 +391,19 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
   </div>
 </section>
 
+
+<!-- ============ LEARN ============ -->
+<section id="learn">
+  <div class="sechd">
+    <div class="kick">Start from zero</div>
+    <h2>はじめから（レッスン）</h2>
+    <p>1本1〜2分。専門用語を使わずに<b>考え方を1つだけ</b>説明して、その場で5問。4問以上で合格。合格した分野だけが3分セッションの「習った分野だけ」に出る。</p>
+  </div>
+  <div class="card gold" id="learn-prog"></div>
+  <div id="learn-list"></div>
+  <div id="learn-view" hidden></div>
+  <p><small>本文の点線が付いた言葉はタップすると1行の説明が出る（全ページ共通）。</small></p>
+</section>
 
 <!-- ============ BASICS ============ -->
 <section id="basics">
@@ -1835,7 +1869,7 @@ canvas{max-width:100%; background:#0d1713; border:1px solid var(--line); border-
 <script>
 /* ======================= NAV ======================= */
 const NAV=[
- ['Foundation',[['home','ホーム／結論'],['quick','▶ 3分セッション'],['basics','期待値とハウスエッジ'],['bankroll','資金管理・ケリー'],['myths','死んだ必勝法']]],
+ ['Foundation',[['home','ホーム／結論'],['quick','▶ 3分セッション'],['learn','はじめから（レッスン）'],['basics','期待値とハウスエッジ'],['bankroll','資金管理・ケリー'],['myths','死んだ必勝法']]],
  ['Blackjack',[['bj-rules','ルールと卓選び'],['bj-bs','ベーシックストラテジー'],['bj-drill','▶ ドリル：BS'],['bj-count','カウンティング'],['bj-cdrill','▶ ドリル：カウント'],['bj-dev','デビエーション']]],
  ['Poker',[['pk-math','基礎数学'],['pk-gto','GTOとは何か'],['pk-range','① オープンレイズ'],['pk-vs','② 対レイズ・3bet・4bet'],['pk-push','▶ プッシュ/フォールド Nash'],['pk-post','ポストフロップ'],['pk-exp','エクスプロイト／ICM'],['pk-tools','▶ ドリルとツール']]],
  ['Other games',[['g-bac','バカラ'],['g-rou','ルーレット'],['g-cra','クラップス'],['g-vp','ビデオポーカー'],['g-other','その他テーブル']]],
@@ -3207,8 +3241,8 @@ if(location.protocol.indexOf('http')===0&&'serviceWorker' in navigator){
 /* ======================= APP MODE (全部 / ポーカー / BJ) ======================= */
 const MODE_SEC={
   all:null,
-  poker:['home','quick','bankroll','pk-math','pk-gto','pk-range','pk-vs','pk-push','pk-post','pk-exp','pk-tools','gloss'],
-  bj:['home','quick','basics','bankroll','myths','bj-rules','bj-bs','bj-drill','bj-count','bj-cdrill','bj-dev','edge','gloss']
+  poker:['home','quick','learn','bankroll','pk-math','pk-gto','pk-range','pk-vs','pk-push','pk-post','pk-exp','pk-tools','gloss'],
+  bj:['home','quick','learn','basics','bankroll','myths','bj-rules','bj-bs','bj-drill','bj-count','bj-cdrill','bj-dev','edge','gloss']
 };
 const MODE_LABEL={all:'カジノ全部',poker:'ポーカーだけ',bj:'ブラックジャックだけ'};
 const MODE_NOTE={
@@ -3336,6 +3370,542 @@ function rebuildQuickChips(){
 })();
 
 rebuildNav();paintMode();rebuildQuickChips();
+
+
+/* ======================= EASY SUMMARIES (この章を一言で) ======================= */
+const EASY={
+ basics:['どのゲームも「100円賭けると平均で何円戻るか」が決まっている。戻りが100円を下回る分が、お店の取り分。',
+  ['ブラックジャックは99.5円戻る（取り分0.5円）。ルーレットは97.3円。スロットは90〜95円',
+   '1回の勝ち負けは運。でも回数を重ねるほど、必ずこの「平均」に近づく',
+   'だから「勝ち方」より先に、「どのゲーム・どの賭け方が取り分が小さいか」を知る。それがこの章']],
+ bankroll:['有利なゲームでも、賭け金が大きすぎると資金が尽きて終わる。「1回にいくら賭けていいか」の話。',
+  ['目安：1回に賭けるのは資金の1%以下。ポーカーなら、卓に持ち込む額の30倍は手元に残す',
+   '「ケリー基準」＝資金の何%を賭けると一番速く増えるかの公式。実戦ではその半分くらいで賭ける',
+   '「破産確率」＝この賭け方を続けたとき資金がゼロになる確率。5%以下に抑える']],
+ myths:['「負けたら倍賭け」「赤が続いたから次は黒」は全部ウソ。理由は、どう賭けても1回ごとの取り分は同じだから。',
+  ['倍賭け（マーチンゲール）は、小さく勝つ回数を増やして、たまに大きく負ける形に変えているだけ。合計は変わらない',
+   'ルーレットやバカラは「前の結果」を覚えていない。10回赤が出ても、次に黒が出やすくはならない',
+   '本当に効くのは4つだけ：ポーカー（相手が人間）、ブラックジャックのカウンティング、還元率100%超のビデオポーカー、カジノのキャンペーン']],
+ 'bj-rules':['座る前に「ブラックジャックの配当が 3:2 か 6:5 か」だけは必ず見る。6:5 の卓に座った時点で負けている。',
+  ['ディーラーは「17まで引く」だけの機械。表のカードが 2〜6 なら自滅しやすく（4割）、7〜A なら強い',
+   '保険（インシュランス）は名前に反して損。断る',
+   'サイドベット（21+3 など）は全部お店が有利。手を出さない']],
+ 'bj-bs':['「自分の合計」と「ディーラーの表カード」の組み合わせごとに、最善の1手が決まっている。それがこの表。感覚で打つと必ず表に負ける。',
+  ['色の意味：赤＝引く、黄＝止める、緑＝倍、青＝分ける、灰＝降りる',
+   '約340マスあるが、覚え方は「7つの塊」。表の下から読む',
+   '先に「はじめから（レッスン）」のブラックジャック①〜③をやると、色の並びに理由が見える']],
+ 'bj-count':['出たカードに「小さい＝+1、大きい＝−1」の点をつけて足すだけ。合計がプラスに大きいほど今は有利なので、そのときだけ賭け金を上げる。',
+  ['なぜ効くか：ブラックジャックだけは配られたカードが山から消えるから。10やAが多く残っているほどプレイヤー有利',
+   '「トゥルーカウント」＝合計 ÷ 残りのデッキ数。+2以上で有利、+3で保険を取っていい',
+   '儲けの8割は「賭け金を変えること」から出る。打ち方を変えるのは2割']],
+ 'bj-dev':['カウントが大きい（または小さい）ときだけ、いつもの表と違う判断が正解になる手が18個ある。',
+  ['まず3つ：「保険は +3以上で取る」「16 vs 10 は 0以上で止める」「12 vs 3 は +2以上で止める」',
+   '表の「インデックス」＝その数字以上（または以下）のときに右の行動をする、という線',
+   '全部覚えなくていい。上の3つで効果の大半が取れる']],
+ 'pk-math':['ポーカーの計算は2つだけ。「当たりカードが何枚残っているか（アウツ）」と「払う額に見合う勝率か（ポットオッズ）」。',
+  ['当たる確率 ＝ アウツ×4（あと2枚来る）／アウツ×2（あと1枚）',
+   '必要な勝率 ＝ 払う額 ÷ 払った後のポット。相手のベットがポットの半分なら25%、同じ額なら33%',
+   '下の大きな表は丸暗記する価値がある1枚。まず「1/2ポット」「ポット」の2行だけ覚える']],
+ 'pk-gto':['GTO は「相手が何をしてきても、こちらが損しない打ち方」。最強の打ち方ではなく、基準線。',
+  ['仕組みは1つだけ。相手の「どっちでもいい手」を本当にどっちでもいい状態にする＝ブラフと本物の割合を決める',
+   'MDF ＝ 相手がベットしてきたとき「最低これだけは降りない」割合。ポット100にベット50なら 67%',
+   '相手が下手なら、この基準からわざと外れた方が儲かる。それは「エクスプロイト」の章']],
+ 'pk-range':['席の位置で「参加していい手」が変わる。後ろに人が多いほど強い手だけ、ボタンなら半分の手で参加。',
+  ['格子の見方：縦が高い方のカード、横が低い方。右上が同じマーク（s）、左下が違うマーク（o）、対角線がペア',
+   '金色のマスが「レイズして参加」、暗いマスが「降りる」',
+   'まず UTG と BTN の2つだけ見比べて、差の大きさを見る']],
+ 'pk-vs':['誰かがレイズしてきたら3択（レイズし返す／コール／降りる）。相手の席と自分の席で、その割合が変わる。',
+  ['金＝レイズし返す（3ベット）、緑＝コール、暗い＝降りる',
+   'スモールブラインドはコールしない。ビッグブラインドは広くコール',
+   '全部覚えなくていい。ドリルで「金・緑・暗い」の形が体に入る']],
+ 'pk-push':['チップが 10bb 以下になったら「全部賭けるか、降りるか」の2択。その境目を計算機が出す。',
+  ['スタック（bb）と席を選んで「計算」。金色のマスが「オールインしていい手」',
+   '右側は「相手がどの手でコールしてくるか」',
+   '境目の手（薄い色）はどちらでも大差ない']],
+ 'pk-post':['フロップ以降は「自分の手」ではなく、「自分が持ちうる手の集合」と「相手の集合」がその場にどう当たったかで考える。',
+  ['自分の方が強い手を多く持てるボードでは、小さく・高い頻度でベット。相手の方が強いボードではチェック多め',
+   'ブラフは「当たれば勝てる手」から選ぶ。何も無い手でブラフしない',
+   'ライブの安い卓では、ブラフより「当たったら厚く取る」が一番儲かる']],
+ 'pk-exp':['GTO は基準。実際に稼ぐのは「相手の癖に合わせて、わざと基準から外す」部分。',
+  ['降りすぎる相手にはブラフを増やす。コールしすぎる相手にはブラフをやめて、本物で厚く取る',
+   'トーナメントの「ICM」＝「チップは現金ではない」という話。入賞ライン付近では無理をしない',
+   '表の「Nashからの調整」は、計算機の答えを場面に合わせて締める目安']],
+ 'g-bac':['バカラは「バンカーに賭ける」以外の正解が無い。罫線（表の模様）は次の結果と無関係。',
+  ['バンカー 1.06%、プレイヤー 1.24%、タイ 14%。タイとペアには絶対賭けない',
+   'カウンティングは理屈上できるが、効果が小さすぎて実用にならない']],
+ 'g-rou':['ルーレットは、どこにどう賭けても取り分が同じ（2.7%）。0が2つある卓（5.26%）には座らない。',
+  ['唯一の例外は「0,00,1,2,3」の5点賭け（7.89%）。これだけは最悪',
+   '変わるのは「波の大きさ」だけ。長くやるなら赤黒、一撃狙いなら1点。負ける率は同じ']],
+ 'g-cra':['クラップスは「パスライン＋オッズ」だけ打つ。それ以外のベットは全部お店が有利。',
+  ['オッズベットはカジノで唯一「取り分ゼロ」の賭け。上限まで乗せる',
+   'Any Seven、ハードウェイ、Big 6/8 は取り分10%前後。近づかない']],
+ 'g-vp':['ビデオポーカーは台の「配当表」を見れば、座る前に良し悪しが分かる。9/6（フルハウス9・フラッシュ6）の台を探す。',
+  ['必ず5コイン（マックス）。ロイヤルの配当が跳ね上がるから',
+   '「どのカードを残すか」の順位表がある。ロイヤルへの4枚は、完成したフラッシュより優先']],
+ 'g-other':['スリーカードポーカーや UTH などのテーブルゲームは「決まった手順」があり、それに従うと取り分が最小になる。',
+  ['スリーカード：Q-6-4 以上でプレイ。UTH：ペアや A などは最初に4倍で入る',
+   'スロット・キノ・ビッグシックスには戦略が無い。取り分も大きい']],
+ edge:['全ゲームの取り分を1枚に並べた。上ほど「マシ」。平均ベットと時間を入れると、1時間で財布から出る額が出る。',
+  ['「マシ」側：ブラックジャック、クラップス（パス＋オッズ）、バカラのバンカー',
+   '「最悪」側：タイ、サイドベット、Any Seven、キノ']],
+ work:['カジノで働く側に必要なのは、ゲームのルールより「手順」と「何を見張るか」。',
+  ['手のひらをカメラに見せる、金額を声に出す、客と手渡ししない',
+   '面接で差がつくのは「自分の卓の取り分を数字で言えること」']]
+};
+Object.keys(EASY).forEach(id=>{
+  const sec=document.getElementById(id);if(!sec)return;
+  const hd=sec.querySelector('.sechd');if(!hd)return;
+  const [lead,bul]=EASY[id];
+  const el=document.createElement('div');el.className='card grn easy';
+  el.innerHTML='<div class="ttl">この章を一言で</div><p style="margin:0 0 8px;font-size:15px;font-weight:700;line-height:1.7">'+lead+'</p>'+
+    '<ul style="margin:0;font-size:13.5px">'+bul.map(b=>'<li>'+b+'</li>').join('')+'</ul>'+
+    '<div style="font-size:12px;color:var(--tx3);margin-top:8px">ここだけ読めば十分。下は詳しく知りたいときに。</div>';
+  hd.parentNode.insertBefore(el,hd.nextSibling);
+});
+
+
+/* ======================= LEARN (lessons) ======================= */
+PROG.lessons=PROG.lessons||{};
+let QOPTS={};
+const LESSONS=[
+ {id:'edge',cat:'edge',track:'common',title:'ハウスエッジって何',sum:'100円賭けるごとに、平均いくら取られるか',detail:'basics',html:`
+<p>カジノのゲームは全部、<b>お店が少しだけ有利</b>に作られている。その「少し」を数字にしたのがハウスエッジ。</p>
+<p>例：ハウスエッジ 2.7% ＝ <b>100円賭けるたびに平均2.7円お店に取られる</b>。1回だけなら勝ったり負けたりするけど、1000回やれば必ずこの数字に近づく。</p>
+<p>だから大事なことは1つだけ。<b>ハウスエッジが小さいゲーム・賭け方を選ぶ。</b></p>
+<div class="card"><div class="ttl" style="color:var(--gold)">ざっくり覚える</div>
+<p style="margin:0">低い（いい）：ブラックジャック 0.5%／バカラのバンカー 1%／クラップスのパスライン 1.4%<br>
+高い（だめ）：ルーレット 2.7〜5%／スロット 5〜10%／タイやサイドベット 10%以上／キノ 25%</p></div>
+<p>ドリルは「どっちが低い？」。数字を暗記しなくていい。上の「いい／だめ」の感覚だけで答えられる。</p>`},
+
+ {id:'bj_hard',cat:'bj_bs',track:'bj',qopts:{only:'hard'},title:'ブラックジャック① 数字だけの手',sum:'見るのは「自分の合計」と「ディーラーの表のカード」だけ',detail:'bj-bs',html:`
+<p>ディーラーは「17になるまで必ず引く」というルールで動く機械。だから<b>ディーラーの表のカードが 2〜6 のとき、ディーラーは引きすぎて21を超えやすい</b>（4割くらい）。7〜A のときは強い。</p>
+<p>ここから決まるルールは4つ。</p>
+<ol>
+<li>自分が <b>17以上</b> → 止める（スタンド）</li>
+<li>自分が <b>12〜16</b>、ディーラーが <b>2〜6</b> → 止める。相手が自滅するのを待つ<br><small>例外：自分が12で、ディーラーが2か3のときだけ引く</small></li>
+<li>自分が <b>12〜16</b>、ディーラーが <b>7〜A</b> → 引く（ヒット）。怖くても引く</li>
+<li>自分が <b>11</b> → 倍賭け（ダブル）。<b>10</b> はディーラー2〜9なら倍。<b>9</b> はディーラー3〜6なら倍</li>
+</ol>
+<div class="card"><p style="margin:0">例：自分16・ディーラー5 → <b>止める</b>。自分16・ディーラー10 → <b>引く</b>（サレンダーできる卓なら降りる）。自分11・ディーラー6 → <b>倍</b>。</p></div>
+<p>ドリルは数字だけの手を5問。ボタンは5つあるけど、今は「ヒット／スタンド／ダブル」と、16vs9〜A・15vs10 の「サレンダー」だけ使う。</p>`},
+
+ {id:'bj_soft',cat:'bj_bs',track:'bj',qopts:{only:'soft'},title:'ブラックジャック② Aがある手（ソフト）',sum:'Aは1でも11でもいい。だから引いても21を超えない',detail:'bj-bs',html:`
+<p>Aは <b>1とも11とも</b>数えられる。「A+6」は7でも17でもある。こういう手を<b>ソフト</b>と呼ぶ。</p>
+<p>ソフトの手は<b>引いても絶対に21を超えない</b>（超えそうならAを1と数え直せばいい）。だから普通の17より攻められる。</p>
+<ul>
+<li><b>ソフト13〜17</b>（A+2〜A+6）→ 基本は引く。ディーラーが弱い（4〜6。A+6なら3〜6）ときは倍賭け</li>
+<li><b>ソフト18</b>（A+7）→ ディーラー <b>2・7・8</b> なら止める／<b>3〜6</b> なら倍／<b>9・10・A</b> なら引く</li>
+<li><b>ソフト19・20</b> → 止める</li>
+</ul>
+<div class="card red"><div class="ttl">一番間違えやすいのがソフト18</div><p style="margin:0">18は強そうに見えるけど、ディーラー9以上には負けている手。引いて19〜21を狙う。</p></div>
+<p>ドリルはAがある手を5問。</p>`},
+
+ {id:'bj_pair',cat:'bj_bs',track:'bj',qopts:{only:'pair'},title:'ブラックジャック③ 同じ数字が2枚（ペア）',sum:'分けていいペア、分けちゃだめなペア',detail:'bj-bs',html:`
+<p>同じ数字2枚は「2つの手に分ける」（<b>スプリット</b>）ことができる。賭け金も2倍になる。</p>
+<ul>
+<li><b>AとA、8と8 → 必ず分ける</b>（AAは強い手が2つに。88は「16」という最悪の手を捨てて8を2つに）</li>
+<li><b>10と10、5と5 → 絶対分けない</b>（20は強い。55は「10」として倍賭け）</li>
+<li>2・2、3・3、7・7 → ディーラー 2〜7 なら分ける</li>
+<li>9・9 → ディーラー <b>7・10・A のときだけ止める</b>、それ以外は分ける</li>
+<li>6・6 → ディーラー 2〜6 なら分ける／4・4 → ディーラー 5・6 だけ分ける</li>
+</ul>
+<p>ドリルはペアを5問。「AA・88は分ける、TT・55は分けない」だけで半分は取れる。</p>`},
+
+ {id:'hilo',cat:'hilo',track:'bj',title:'カウンティング① カードに点をつける',sum:'小さいカードが出たら +1、大きいカードが出たら −1',detail:'bj-count',html:`
+<p>ブラックジャックだけは「配られたカードが山から消える」ので、残りの山の中身が変わっていく。<b>大きいカード（10・絵札・A）が多く残っているほど、プレイヤーが有利</b>。</p>
+<p>だから出たカードに点をつけて足していく。</p>
+<div class="card"><p style="margin:0;font-size:16px">
+2〜6（小さい）→ <b style="color:#66c79b">+1</b><br>
+7〜9 → <b>0</b><br>
+10・J・Q・K・A（大きい）→ <b style="color:#e7857c">−1</b></p></div>
+<p>合計がプラスに大きいほど「今は有利」。<b>そのときだけ賭け金を上げる</b>。それがカウンティングの全部。</p>
+<p>ドリルは1枚ずつ。「小さいのが出た＝大きいのが残ってる＝プラス」と思えば迷わない。</p>`},
+
+ {id:'count5',cat:'count5',track:'bj',title:'カウンティング② まとめて数える',sum:'大小1枚ずつは打ち消して0。残りだけ数える',detail:'bj-cdrill',html:`
+<p>実戦では卓に5〜6枚が同時に見える。1枚ずつ足すより、<b>「大きい1枚と小さい1枚」をペアにして打ち消す</b>と速い。</p>
+<div class="card"><p style="margin:0">例：5・K・3・Q・8 → (5とK)=0、(3とQ)=0、8=0 → 合計 <b>0</b><br>
+例：2・4・6・10・7 → +1 +1 +1 −1 0 → 合計 <b>+2</b></p></div>
+<p>ドリルは5〜6枚の合計を4択で。最初は指を折って数えていい。</p>`},
+
+ {id:'bj_dev',cat:'bj_dev',track:'bj',qopts:{easy:true},title:'カウンティング③ 数えた結果で打ち方を変える',sum:'有利なときだけ、いつもと違う判断が正解になる',detail:'bj-dev',html:`
+<p>「トゥルーカウント」＝合計 ÷ 残りの山の数（デッキ数）。<b>+3</b> なら「かなり有利」。</p>
+<p>有利なときは、普段の表と違う判断が正解になる手がある。まずこの3つだけ。</p>
+<ul>
+<li>ディーラーAのときの<b>保険</b> → 普段は絶対断る。<b>+3以上なら取る</b></li>
+<li><b>16 vs 10</b> → 普段は引く。<b>0以上なら止める</b></li>
+<li><b>12 vs 3</b> → 普段は引く。<b>+2以上なら止める</b></li>
+</ul>
+<p>本当は18個ある（Illustrious 18）けど、この3つが一番よく出て、一番効く。</p>
+<p>ドリルは上の3つだけ出る。カウントが線を超えているかを見る。</p>`},
+
+ {id:'outs',cat:'outs',track:'poker',title:'ポーカー① アウツ（当たりカードの枚数）',sum:'必要なカードが山に何枚残っているか。×4 か ×2',detail:'pk-math',html:`
+<p>ポーカーで一番よく使う計算。「自分が勝つために必要なカードが、山に何枚残っているか」＝<b>アウツ</b>。</p>
+<div class="card"><p style="margin:0">例：あと1枚同じマークが来ればフラッシュ。同じマークは13枚、手元と場に4枚見えている → 残り <b>9枚</b> がアウツ。</p></div>
+<p>何%で当たるかは掛け算だけ。</p>
+<ul>
+<li>カードが<b>あと2枚</b>来る（フロップの時点）→ <b>アウツ × 4</b></li>
+<li><b>あと1枚</b>（ターンの時点）→ <b>アウツ × 2</b></li>
+</ul>
+<p>9枚 × 4 = 約36%（正確には35%）。9枚 × 2 = 約18%。</p>
+<p>ドリルはアウツの枚数から%を4択で。掛け算して一番近いのを選ぶ。</p>`},
+
+ {id:'potodds',cat:'potodds',track:'poker',title:'ポーカー② ポットオッズ（払う額と取れる額）',sum:'必要な勝率 ＝ 払う額 ÷ 払った後のポット',detail:'pk-math',html:`
+<p>相手にベットされた。コールか、降りるか。決め方は「<b>勝てる確率</b>」と「<b>払う額に見合うか</b>」の比べっこ。</p>
+<div class="card"><p style="margin:0;font-size:15px">必要な勝率 ＝ <b>払う額 ÷（払った後のポット全体）</b></p></div>
+<p>例：ポット100に相手が50ベット → 場には150。自分が50払うとポットは200。<b>50 ÷ 200 = 25%</b>。自分の勝率が25%以上ならコール。</p>
+<p>さっきのフラッシュ待ち（35%）なら → <b>コールが正解</b>。</p>
+<div class="card"><div class="ttl" style="color:var(--gold)">丸暗記でいい2つ</div><p style="margin:0">相手のベットが<b>ポットの半分</b> → 25%必要<br>相手のベットが<b>ポットと同じ額</b> → 33%必要</p></div>
+<p>ドリルはポットとベットの額から必要な%を4択で。</p>`},
+
+ {id:'freq',cat:'freq',track:'poker',title:'ポーカー③ 降りていい割合（MDF）とブラフ',sum:'全部「ポットとベットの割り算」。例を1つ丸ごと覚える',detail:'pk-gto',html:`
+<p>今度は逆の立場。相手が「ブラフばかりで儲かる」状態にさせないための線。</p>
+<p>相手がベットしてきたとき、<b>ポット ÷（ポット＋ベット）</b>の割合は降りちゃいけない。これが <b>MDF</b>（最低防御頻度）。</p>
+<div class="card"><p style="margin:0">例：ポット100・ベット50 → 100÷150 = <b>67%</b>はコールかレイズ。降りていいのは33%まで。</p></div>
+<p>自分がブラフするとき、成功に必要な「相手が降りる確率」は <b>ベット ÷（ポット＋ベット）</b> ＝ 33%。（さっきの裏返し。これを <b>α</b> と呼ぶ）</p>
+<p>リバーで自分がベットするなら、ブラフの割合は「必要な勝率」と同じ数字。ポットの半分なら25%、同じ額なら33%。</p>
+<div class="card gold"><p style="margin:0">3つの式を覚えるより、<b>「ポット100・ベット50 → 67% / 33% / 25%」の例を丸ごと覚える</b>。他のサイズは比率で伸び縮みするだけ。</p></div>
+<p>ドリルは3種類が混ざって出る。問題文の「何を聞かれているか」だけ見て、上の3つのどれかを当てはめる。</p>`},
+
+ {id:'rfi',cat:'rfi',track:'poker',title:'ポーカー④ 席の位置と、最初のレイズ',sum:'後ろに人が多いほど強い手だけ。ボタンなら半分の手で参加',detail:'pk-range',html:`
+<p>ポーカーは「<b>後から動く人が有利</b>」。だから席の位置（<b>ポジション</b>）で、参加していい手の範囲（<b>レンジ</b>）が変わる。</p>
+<ul>
+<li>後ろに人が多い（早い席）ほど、強い手だけ</li>
+<li>後ろがブラインド2人だけ（<b>ボタン</b>）なら、かなり弱い手でも参加</li>
+</ul>
+<div class="card"><p style="margin:0">6人卓の目安：一番早い席（UTG）は約18%＝ペア全部・Aのスーテッド全部・AJ以上・KQ。ボタンは約45%＝ほぼ半分の手。</p></div>
+<p>「<b>スーテッド</b>」＝2枚が同じマーク（表では s）。同じ2枚でもスーテッドの方が価値が高い（フラッシュができるから）。違うマークは「オフスート」（o）。</p>
+<p>ドリルは席とハンドを見て「レイズ／フォールド」。最初は当てずっぽうでいい。間違えたときに出る「この席は◯%」を見ていると、5問ごとに感覚ができる。</p>`},
+
+ {id:'vsopen',cat:'vsopen',track:'poker',title:'ポーカー⑤ 相手がレイズしてきたら',sum:'3ベット（レイズし返す）／コール／フォールドの3択',detail:'pk-vs',html:`
+<p>誰かが先にレイズした。自分の選択は3つ。<b>3ベット</b>（レイズし返す）／<b>コール</b>／<b>フォールド</b>。</p>
+<ul>
+<li><b>3ベット</b>＝強い手（QQ以上・AK）＋「A5s・A4s」みたいなブラフ用の手</li>
+<li><b>コール</b>＝そこそこの手（中くらいのペア、スーテッドの絵札）。自分が後ろの席ほど広く</li>
+<li><b>スモールブラインドはコールしない</b>（3ベットか降りるか）</li>
+<li><b>ビッグブラインドは広くコールする</b>（もう1bb入れているから安く済む）</li>
+</ul>
+<p>相手が早い席からレイズしているほど、相手の手は強い → こちらも締める。相手がボタンなら緩い → こちらも広く戦う。</p>
+<p>ドリルは3択。間違えても「その席・その相手のときの割合」が出るので、それを見て次へ。</p>`},
+
+ {id:'vs3bet',cat:'vs3bet',track:'poker',title:'ポーカー⑥ 自分がレイズ → レイズし返された',sum:'4ベット／コール／フォールドの3択',detail:'pk-vs',html:`
+<p>自分がレイズして、相手が3ベット（レイズし返し）してきた。選択は <b>4ベット</b>／<b>コール</b>／<b>フォールド</b>。</p>
+<ul>
+<li><b>4ベット</b>＝KK・AA・AK。たまに A5s（ブラフ）。QQ は相手の席次第</li>
+<li><b>コール</b>＝ペア・スーテッドの絵札。相手がブラインド（自分が後から動ける）なら広く</li>
+<li><b>フォールド</b>＝弱いオフスート、小さいスーテッド。レイズした手の半分くらいは降りていい</li>
+</ul>
+<p>ドリルは3択。「自分が後から動けるか」で、コールの広さが変わるのを体で覚える。</p>`},
+
+ {id:'push',cat:'push',track:'poker',title:'ポーカー⑦ チップが少ないときは、全部か降りるか',sum:'10bb以下なら「オールインかフォールド」の2択',detail:'pk-push',html:`
+<p>トーナメントでチップが <b>10bb</b>（ビッグブラインドの10倍）以下になると、「レイズして様子を見る」余裕が無い。<b>オールインか、降りるか</b>の2択が正解に近づく。</p>
+<ul>
+<li>浅いほど広く行ける。目安：10bbでボタンなら手の3〜4割、5bbなら6割以上</li>
+<li>後ろに人が多い席ほど狭く。ビッグブラインドの手前（SB）は最も広い</li>
+</ul>
+<p>このアプリの計算機は、その境目を「ナッシュ均衡」という理論で計算している。ドリルはその答えで判定する。<b>境目の手はどちらでも正解扱い</b>。</p>
+<p>ドリルは「オールイン／フォールド」。</p>`}
+];
+const LESSON_BY_ID={};LESSONS.forEach(l=>LESSON_BY_ID[l.id]=l);
+const LESSON_BY_CAT={};LESSONS.forEach(l=>{(LESSON_BY_CAT[l.cat]=LESSON_BY_CAT[l.cat]||[]).push(l);});
+
+function lessonTrackOK(l){
+  if(APPMODE==='poker')return l.track!=='bj';
+  if(APPMODE==='bj')return l.track!=='poker';
+  return true;
+}
+function visibleLessons(){return LESSONS.filter(lessonTrackOK);}
+function lessonsDoneCount(){const v=visibleLessons();return [v.filter(l=>PROG.lessons[l.id]).length,v.length];}
+function learnedCats(){
+  const out=[];
+  CATS.forEach(c=>{const ls=LESSON_BY_CAT[c];if(!ls)return;if(ls.some(l=>PROG.lessons[l.id]))out.push(c);});
+  return out;
+}
+function learnedBJSubsets(){
+  const s=[];['bj_hard','bj_soft','bj_pair'].forEach(id=>{if(PROG.lessons[id])s.push(id.slice(3));});
+  return s;
+}
+
+/* ---- list / view ---- */
+function renderLearn(){
+  const [d,n]=lessonsDoneCount();
+  $('learn-prog').innerHTML='<div class="ttl">レッスン '+d+' / '+n+' 合格</div>'+
+    '<p style="margin:0;font-size:13px">'+(d===0?'上から順に。1本1〜2分。読んだら「やってみる」で5問、4問以上で合格。':
+      (d<n?'合格した分野は、3分セッションの「習った分野だけ」に出てくる。':'全部合格。3分セッションを「このモードの全部」で回す段階。'))+'</p>';
+  const list=$('learn-list');list.hidden=false;$('learn-view').hidden=true;
+  let idx=0;
+  list.innerHTML=visibleLessons().map(l=>{
+    idx++;const done=!!PROG.lessons[l.id];
+    return '<div class="lesson'+(done?' done':'')+'" data-l="'+l.id+'">'+
+      '<div class="lnum">'+(done?'✓':idx)+'</div>'+
+      '<div class="lbody"><div class="ltitle">'+l.title+'</div><div class="lsum">'+l.sum+'</div></div>'+
+      '<div class="lgo">'+(done?'復習':'読む')+' ›</div></div>';
+  }).join('');
+  list.querySelectorAll('.lesson').forEach(el=>el.onclick=()=>openLesson(el.dataset.l));
+}
+function openLesson(id){
+  const l=LESSON_BY_ID[id];if(!l)return;
+  if(!document.getElementById('learn').classList.contains('on'))go('learn');
+  const vis=visibleLessons(),i=vis.indexOf(l),next=vis[i+1];
+  $('learn-list').hidden=true;
+  const v=$('learn-view');v.hidden=false;
+  v.innerHTML='<button id="learn-back" style="margin-bottom:14px">‹ 一覧へ</button>'+
+    '<div class="kick" style="font-size:11px;letter-spacing:.18em;color:var(--gold2);text-transform:uppercase">Lesson</div>'+
+    '<h2 style="font-size:22px;margin:4px 0 14px">'+l.title+'</h2>'+
+    '<div class="lessonbody">'+l.html+'</div>'+
+    '<button class="pri" id="learn-try" style="width:100%;font-size:17px;padding:16px;margin-top:8px">▶ やってみる（5問）</button>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
+      (l.detail?'<a href="#'+l.detail+'" class="btn" style="text-decoration:none">もっと詳しく →</a>':'')+
+      (next?'<button id="learn-next">次のレッスン：'+next.title+' ›</button>':'')+
+    '</div>';
+  $('learn-back').onclick=renderLearn;
+  $('learn-try').onclick=()=>startLesson(id);
+  if(next)$('learn-next').onclick=()=>openLesson(next.id);
+  annotateSection(v);
+  window.scrollTo(0,0);
+}
+
+/* ---- lesson drill (5 questions, no timer) ---- */
+function startLesson(id){
+  const l=LESSON_BY_ID[id];if(!l)return;
+  if(l.cat==='push'&&!PF_CACHE[PF_WARM[0].k]&&!pfWarming)warmPF(0);
+  SESS={lesson:id,cat:l.cat,qopts:l.qopts||{},list:[l.cat],max:5,secs:0,left:0,n:0,ok:0,xp:0,combo:0,best:0,timeSum:0,cat_:{},cat:{},q:null,locked:false,paused:false};
+  SESS.cat=l.cat;SESS.catStat={};
+  $('qplay').classList.add('on');document.body.style.overflow='hidden';
+  $('q-time').textContent='0 / 5';$('q-bar').style.width='0%';
+  if(QTIMER){clearInterval(QTIMER);QTIMER=null;}
+  nextQ();
+}
+function lessonEnd(){
+  const S=SESS;SESS=null;
+  const l=LESSON_BY_ID[S.lesson],pass=S.ok>=4;
+  if(pass){PROG.lessons[S.lesson]=true;}
+  const d=today();if(PROG.last!==d){PROG.streak=(PROG.last===yesterday())?PROG.streak+1:1;PROG.last=d;}
+  saveProg();
+  if(pass&&typeof rebuildQuickChips==='function'){QMODE='learned';rebuildQuickChips();}
+  const vis=visibleLessons(),i=vis.indexOf(l),next=vis[i+1];
+  $('q-time').textContent='—';$('q-bar').style.width='100%';
+  $('q-body').innerHTML='<div class="qcat">'+l.title+'</div>'+
+    '<div style="font-family:var(--mono);font-size:56px;font-weight:700;color:'+(pass?'#66c79b':'#e7857c')+';line-height:1.1">'+S.ok+' / 5</div>'+
+    '<div style="font-size:18px;font-weight:700;margin:6px 0">'+(pass?'合格':'もう一回')+'</div>'+
+    '<div class="qsub">'+(pass?'この分野が「習った分野だけ」に入った。':'4問以上で合格。レッスンの例をもう一度見てから。')+'</div>';
+  $('q-fb').innerHTML='';
+  const ch=$('q-ch');ch.style.gridTemplateColumns='1fr 1fr';
+  ch.innerHTML=(pass&&next?'<button class="pri" id="ql-next">次のレッスン ›</button>':'<button class="pri" id="ql-again">もう一回</button>')+
+    '<button id="ql-close">閉じる</button>';
+  const nb=document.getElementById('ql-next');if(nb)nb.onclick=()=>{closePlay();openLesson(next.id);};
+  const ab=document.getElementById('ql-again');if(ab)ab.onclick=()=>startLesson(S.lesson);
+  $('ql-close').onclick=()=>{closePlay();renderLearn();};
+}
+
+/* hook: nextQ / answer / endSession for lessons */
+const _nextQ=nextQ;
+nextQ=function(){
+  if(SESS&&SESS.lesson){
+    let q=QG[SESS.cat].g(SESS.qopts);
+    if(!q){$('q-body').innerHTML='<div class="qcat">'+LESSON_BY_ID[SESS.lesson].title+'</div><div class="qsub">計算の準備中…</div>';$('q-ch').innerHTML='';setTimeout(()=>{if(SESS&&SESS.lesson)nextQ();},500);return;}
+    SESS.q=q;SESS.locked=false;SESS.t0=performance.now();
+    $('q-time').textContent=SESS.n+' / '+SESS.max;$('q-bar').style.width=(SESS.n/SESS.max*100)+'%';
+    $('q-body').innerHTML='<div class="qcat">'+QG[q.cat].n+'</div>'+q.prompt;
+    $('q-fb').innerHTML='';
+    const ch=$('q-ch');ch.style.gridTemplateColumns=q.choices.length>=4?'1fr 1fr':'1fr';
+    ch.innerHTML=q.choices.map((c,i)=>'<button data-i="'+i+'"'+((q.choices.length===5&&i===4)?' style="grid-column:1/-1"':'')+'>'+c+'</button>').join('');
+    ch.querySelectorAll('button').forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+    return;
+  }
+  _nextQ();
+};
+const _answer=answer;
+answer=function(i){
+  if(!SESS)return;
+  const wasLesson=!!SESS.lesson;
+  _answer(i);
+  if(wasLesson&&SESS){
+    SESS.paused=false;
+    const done=SESS.n>=SESS.max;
+    const nb=document.getElementById('q-next');
+    if(nb){nb.onclick=()=>{if(done)lessonEnd();else nextQ();};}
+    else if(done){setTimeout(()=>{if(SESS&&SESS.lesson)lessonEnd();},520);}
+  }
+};
+const _endSession=endSession;
+endSession=function(){ if(SESS&&SESS.lesson){lessonEnd();return;} _endSession(); };
+
+/* wrong-answer feedback → link to lesson (session mode) */
+(function(){
+  const _ans=answer;
+  answer=function(i){
+    const q=SESS&&SESS.q,lesson=SESS&&!SESS.lesson;
+    _ans(i);
+    if(lesson&&q&&LESSON_BY_CAT[q.cat]){
+      const fb=$('q-fb');
+      if(fb&&fb.querySelector('#q-next')){
+        const l=LESSON_BY_CAT[q.cat][0];
+        const a=document.createElement('button');a.textContent='この分野のレッスンを読む';a.style.cssText='width:100%;margin-top:6px';
+        a.onclick=()=>{closePlay();openLesson(l.id);};
+        fb.appendChild(a);
+      }
+    }
+  };
+})();
+
+/* ---- 「習った分野だけ」 in quick session ---- */
+GROUPS.learned=[];
+const _rebuildQuickChips=rebuildQuickChips;
+rebuildQuickChips=function(){
+  const host=$('q-mode');if(!host)return;
+  const learned=learnedCats().filter(c=>allowedCats().indexOf(c)>=0);
+  const [d,n]=lessonsDoneCount();
+  const items=[];
+  if(learned.length&&d<n)items.push(['learned','習った分野だけ']);
+  if(APPMODE!=='poker')items.push(['bj','ブラックジャックだけ']);
+  if(APPMODE!=='bj')items.push(['poker','ポーカーだけ']);
+  items.push(['all',APPMODE==='all'?'全部':'このモードの全部']);
+  items.push(['weak','弱点だけ']);
+  if(items.map(i=>i[0]).indexOf(QMODE)<0)QMODE=items[0][0];
+  host.innerHTML=items.map(([m,l])=>'<button data-m="'+m+'"'+(m===QMODE?' class="on"':'')+'>'+l+'</button>').join('');
+  host.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    QMODE=b.dataset.m;host.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    const s=$('q-start');
+    if(s)s.textContent=(QMODE==='weak'&&!weakList(allowedCats()))?'▶ スタート（データ不足→このモードの全部で出題）':'▶ スタート';
+  });
+  let hint=document.getElementById('q-learnhint');
+  if(!hint){hint=document.createElement('div');hint.id='q-learnhint';hint.className='card';host.parentNode.insertBefore(hint,host.nextSibling);}
+  if(d<n){
+    hint.innerHTML='<p style="margin:0;font-size:13px">レッスン <b>'+d+' / '+n+'</b> 合格。'+(d===0?'<b>最初は「はじめから（レッスン）」で1本ずつ</b>。習っていない問題は「習った分野だけ」に出ない。':'続きは「はじめから（レッスン）」。')+
+      '　<a href="#learn">レッスンへ →</a></p>';
+  }else hint.hidden=true;
+};
+const _startSession=startSession;
+startSession=function(mode,secs){
+  const m=mode||QMODE;
+  QOPTS={};
+  if(m==='learned'){
+    const allow=allowedCats();
+    GROUPS.learned=learnedCats().filter(c=>allow.indexOf(c)>=0);
+    QOPTS.bjOnly=learnedBJSubsets();
+    if(!GROUPS.learned.length){alert('まだ合格したレッスンがない。先に「はじめから」で1本。');return;}
+  }
+  _startSession(mode,secs);
+};
+
+/* bj_bs generator honours subsets */
+(function(){
+  const g0=QG.bj_bs.g;
+  QG.bj_bs.g=function(o){
+    o=o||{};
+    if(!o.only&&QOPTS.bjOnly&&QOPTS.bjOnly.length)o={only:rnd(QOPTS.bjOnly)};
+    if(!o.only)return g0();
+    for(let k=0;k<40;k++){const q=g0();const isPair=/10,10|A,A|\d,\d/.test(q.prompt.match(/あなた — <b>([^<]+)<\/b>/)[1]);
+      const isSoft=q.prompt.indexOf('ソフト')>=0;
+      const t=isPair?'pair':(isSoft?'soft':'hard');
+      if(t===o.only)return q;}
+    return g0();
+  };
+  const d0=QG.bj_dev.g;
+  QG.bj_dev.g=function(o){
+    if(!(o&&o.easy))return d0();
+    for(let k=0;k<60;k++){const q=d0();if(/インシュランス|ハード16 vs ディーラー10|ハード12 vs ディーラー3/.test(q.prompt))return q;}
+    return d0();
+  };
+})();
+
+/* ---- term help (tap a word) ---- */
+const TERMS=[
+ ['ベーシックストラテジー','自分の手とディーラーの表カードだけで決まる「最善の1手」の表。感覚ではなく計算の答え'],
+ ['ランニングカウント','出たカードの点（+1／0／−1）を足していった合計'],
+ ['トゥルーカウント','ランニングカウント ÷ 残りのデッキ数。有利さの本当の目安'],
+ ['ペネトレーション','シューのカードをどこまで配ってから切り直すか。深いほどカウンティングに有利'],
+ ['デビエーション','カウントが大きいときにベーシックストラテジーから外れる特別ルール'],
+ ['インシュランス','ディーラーがAのときの「保険」。原則は損なので断る'],
+ ['サレンダー','賭け金の半分を払ってその手を降りる'],
+ ['ダブルダウン','賭け金を倍にして、カードを1枚だけ引く'],
+ ['スプリット','同じ数字2枚を2つの手に分ける（賭け金も2倍）'],
+ ['ハウスエッジ','お店の取り分。100円賭けるごとに平均で取られる額（%）'],
+ ['バンクロール','ギャンブル専用に分けた資金。生活費とは別'],
+ ['ケリー基準','資金の何%を賭けると一番速く増えるかの公式'],
+ ['期待値','1回あたり平均でいくら増減するか'],
+ ['分散','結果のばらつきの大きさ。大きいほど短期の波が激しい'],
+ ['ポットオッズ','払う額に対してポットがいくらあるか。コールに必要な勝率を決める'],
+ ['エクイティ','今の時点で自分がポットを取れる確率（%）'],
+ ['アウツ','当たれば勝てるカードの残り枚数'],
+ ['ブロッカー','自分が持っていることで、相手の強い手の組み合わせが減るカード'],
+ ['ポラライズ','ベットする手を「すごく強い」か「ブラフ」の両極端にすること'],
+ ['スーテッド','2枚が同じマーク（表では s）。違うマークはオフスート（o）'],
+ ['ポジション','席の順番。後から動くほど有利'],
+ ['レンジ','その状況で持ちうる手の「集合」。1つの手ではなく範囲で考える'],
+ ['3ベット','レイズに対するレイズ（リレイズ）'],
+ ['4ベット','3ベットに対する、さらなるレイズ'],
+ ['c-bet','プリフロップでレイズした人が、フロップでも続けてベットすること'],
+ ['ナッツ','その時点で最強の手'],
+ ['MDF','最低防御頻度。相手のベットに対して「最低これだけは降りない」割合'],
+ ['GTO','相手が何をしても搾取されない打ち方（ゲーム理論の最適戦略）'],
+ ['ICM','トーナメントでチップを賞金の期待値に換算する考え方'],
+ ['RFI','誰もまだレイズしていない状態で、最初にレイズすること'],
+ ['SPR','スタック ÷ ポット。小さいほどすぐ全部のチップが入る'],
+ ['OOP','ポジションが無い＝相手より先に動かされる側'],
+ ['IP','ポジションが有る＝相手より後から動ける側'],
+ ['bb','ビッグブラインド。賭け金の単位（10bb＝ビッグブラインド10個分）'],
+ ['ソフト','Aを11と数えている手。引いても21を超えない'],
+ ['ハード','Aが無い、またはAを1と数えている手']
+].sort((a,b)=>b[0].length-a[0].length);
+const TERM_DEF={};TERMS.forEach(([t,d])=>TERM_DEF[t]=d);
+function wrapTerms(node,seen){
+  let cur=node;
+  while(cur&&cur.nodeValue){
+    const text=cur.nodeValue;let best=null;
+    for(let k=0;k<TERMS.length;k++){const t=TERMS[k][0];if(seen[t])continue;const i=text.indexOf(t);if(i>=0&&(best===null||i<best.i))best={t,i};}
+    if(!best)return;
+    if(/[A-Za-z]/.test(best.t)){const b=text[best.i-1],a=text[best.i+best.t.length];if((b&&/[A-Za-z0-9]/.test(b))||(a&&/[A-Za-z0-9]/.test(a))){seen[best.t]=1;continue;}}
+    seen[best.t]=1;
+    const after=cur.splitText(best.i),rest=after.splitText(best.t.length);
+    const span=document.createElement('span');span.className='term';span.dataset.t=best.t;span.textContent=best.t;
+    after.parentNode.replaceChild(span,after);
+    cur=rest;
+  }
+}
+function annotateSection(sec){
+  if(!sec||sec.dataset.annot)return;sec.dataset.annot='1';
+  const seen={};
+  const walker=document.createTreeWalker(sec,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    const p=n.parentElement;if(!p)return NodeFilter.FILTER_REJECT;
+    if(p.closest('code,pre,h1,h2,h3,h4,.rg,table.mx,.kick,.term,button,input,select,a,.qcat,.hand,.pc,.sechd,#qplay,.legend,.chips'))return NodeFilter.FILTER_REJECT;
+    if(!p.closest('p,li,td,.card,.ttl,.lessonbody'))return NodeFilter.FILTER_REJECT;
+    return n.nodeValue.trim().length>1?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[];let n;while((n=walker.nextNode()))nodes.push(n);
+  nodes.forEach(node=>wrapTerms(node,seen));
+}
+(function(){
+  const pop=document.createElement('div');pop.id='termpop';document.body.appendChild(pop);
+  document.addEventListener('click',e=>{
+    const t=e.target.closest&&e.target.closest('.term');
+    if(t){
+      e.preventDefault();
+      pop.innerHTML='<b>'+t.dataset.t+'</b>'+TERM_DEF[t.dataset.t];
+      pop.style.display='block';
+      const r=t.getBoundingClientRect(),W=window.innerWidth,pw=Math.min(300,W-24);
+      pop.style.width=pw+'px';
+      let x=Math.max(12,Math.min(r.left,W-pw-12));
+      pop.style.left=x+'px';
+      const ph=pop.offsetHeight;
+      pop.style.top=((r.bottom+8+ph<window.innerHeight)?(r.bottom+8):(r.top-ph-8))+'px';
+    }else pop.style.display='none';
+  });
+  window.addEventListener('scroll',()=>{pop.style.display='none';},{passive:true});
+})();
+const _goL=go;
+go=function(id){_goL(id);const s=document.querySelector('section.on');if(s)annotateSection(s);if(s&&s.id==='learn')renderLearn();};
+
+/* home: beginner CTA */
+(function(){
+  const cta=document.querySelector('#home a[href="#quick"]');if(!cta)return;
+  const a=document.createElement('a');a.href='#learn';
+  a.style.cssText='display:block;text-decoration:none;border:1px solid var(--gold2);color:var(--gold);border-radius:12px;padding:13px 16px;margin:-8px 0 18px;text-align:center';
+  a.innerHTML='<div style="font-size:15px;font-weight:700">はじめての人はここから → レッスン</div><div style="font-size:12px;opacity:.8;margin-top:2px">1本1〜2分。専門用語なしで1つずつ。習った分野だけがドリルに出る</div>';
+  cta.parentNode.insertBefore(a,cta.nextSibling);
+})();
+rebuildQuickChips();
+if(document.querySelector('section.on'))annotateSection(document.querySelector('section.on'));
 
 
 /* boot */
